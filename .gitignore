@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+.npm-cache/
+.electron-cache/
+.test-dsh-home/
+.dshtmp/
+*.log
+.DS_Store
+Thumbs.db
+npm-debug.log*

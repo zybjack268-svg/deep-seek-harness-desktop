@@ -1,0 +1,172 @@
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #f5f6f7;
+  --bg-card: #ffffff;
+  --border: #e4e6ea;
+  --text: #151517;
+  --text-muted: #6b7280;
+  --accent: #4d6bfe;
+  --accent-soft: rgba(77, 107, 254, 0.1);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151517;
+    --bg-subtle: #1d1d1f;
+    --bg-card: #1d1d1f;
+    --border: #2c2c30;
+    --text: #f0f0f2;
+    --text-muted: #9ca3af;
+    --accent: #7c94ff;
+    --accent-soft: rgba(124, 148, 255, 0.14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.title { display: flex; align-items: baseline; gap: 10px; }
+.title h1 { margin: 0; font-size: 18px; font-weight: 700; }
+.count { color: var(--text-muted); font-size: 13px; }
+
+.search {
+  flex: 1;
+  min-width: 120px;
+  max-width: 340px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.search::placeholder { color: var(--text-muted); }
+.search:focus { border-color: var(--accent); background: var(--bg-card); }
+
+.actions { display: flex; gap: 8px; }
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover { background: var(--bg-subtle); border-color: var(--text-muted); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.08); }
+
+.list { padding: 16px 20px 40px; display: flex; flex-direction: column; gap: 12px; }
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.card:hover { border-color: var(--text-muted); }
+.card.open { box-shadow: var(--shadow); border-color: var(--accent); }
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.card-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card-name .badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.card-desc { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+.card-chevron { color: var(--text-muted); font-size: 12px; flex-shrink: 0; margin-top: 2px; transition: transform 0.15s; }
+.card.open .card-chevron { transform: rotate(90deg); }
+
+.card-body { display: none; border-top: 1px solid var(--border); }
+.card.open .card-body { display: block; }
+
+.card-meta { padding: 10px 16px; color: var(--text-muted); font-size: 12px; border-bottom: 1px solid var(--border); }
+.card-meta span { margin-right: 16px; word-break: break-all; }
+.card-meta code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 11px; background: var(--bg-subtle); padding: 1px 5px; border-radius: 4px; }
+
+.card-content {
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 12.5px;
+  color: var(--text);
+  max-height: 320px;
+  overflow: auto;
+}
+
+.card-actions { display: flex; gap: 8px; padding: 12px 16px; flex-wrap: wrap; }
+
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-icon { font-size: 34px; margin-bottom: 8px; }
+.empty h2 { margin: 0 0 8px; color: var(--text); font-size: 16px; }
+.empty p { margin: 4px 0; }
+.empty code { background: var(--bg-subtle); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+.empty .btn { margin-top: 16px; }
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  max-width: 80%;
+  text-align: center;
+}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:" />
+  <title>技能 · deep seek ZYB</title>
+  <link rel="stylesheet" href="skills.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">
+      <h1>技能</h1>
+      <span id="count" class="count"></span>
+    </div>
+    <input id="search" type="search" class="search" placeholder="搜索技能名称、描述…" spellcheck="false" />
+    <div class="actions">
+      <button id="refresh" class="btn" title="重新扫描">刷新</button>
+      <button id="openFolder" class="btn" title="打开技能文件夹">打开文件夹</button>
+    </div>
+  </header>
+
+  <main id="list" class="list"></main>
+
+  <div id="empty" class="empty" hidden>
+    <div class="empty-icon">✦</div>
+    <h2 id="emptyTitle">还没有技能</h2>
+    <p id="emptyHint">点击「打开文件夹」，在 <code>~/.dsh/skills/</code> 里新建一个 <code>&lt;名字&gt;/SKILL.md</code>，文件头写上 <code>name</code> 和 <code>description</code>。</p>
+    <button id="emptyOpenFolder" class="btn btn-primary">打开文件夹</button>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="skills.js"></script>
+</body>
+</html>

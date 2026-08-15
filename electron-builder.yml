@@ -1,0 +1,66 @@
+appId: ai.deepseek.harness.desktop
+productName: deep seek ZYB
+copyright: Copyright © 2025 deep seek ZYB
+
+directories:
+  output: dist
+  buildResources: assets
+
+# DSH 会在 $DSH_HOME/profiles/node_modules 下创建指向安装目录内各包的
+# 符号链接（Windows 为 junction）。asar 是虚拟只读归档，符号链接无法指向
+# 其中的真实目录，因此必须关闭 asar，让 node_modules 落在真实文件系统上。
+asar: false
+
+# 打包时用 Electron ABI 重新编译原生模块（node-pty / sharp / koffi 等）。
+# 实际上这些关键原生模块都是 N-API（ABI 稳定），Electron 下免重编译即可用；
+# 唯一非 N-API 的 node-addon-require-builtin 已被 --expose-internals 绕过。
+# 关闭重编译可避免依赖本机/CI 的 C++ 编译工具链，也让构建更快、更可复现。
+npmRebuild: false
+
+files:
+  - src/**/*
+  - package.json
+  - "!**/*.map"
+
+# 把图标也拷进打包产物，供 Linux 等平台的窗口图标使用。
+extraResources:
+  - from: assets/icon.png
+    to: assets/icon.png
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  # 安装后自动创建桌面快捷方式（即使升级前被删除也会重建）。
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: deep seek ZYB
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+  icon: assets/icon.png
+  category: public.app-category.developer-tools
+  identity: null
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+  icon: assets/icon.png
+  category: Development
+  maintainer: DeepSeek Harness Desktop
+
+publish:
+  provider: github
+  releaseType: draft

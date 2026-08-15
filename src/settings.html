@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data: file:" />
+  <title>外观设置 · deep seek ZYB</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>外观设置</h1>
+  </header>
+
+  <main class="form">
+    <section class="field">
+      <div class="label">开门光效颜色</div>
+      <div class="row">
+        <input id="glowColor" type="color" value="#87CEEB" />
+        <input id="glowColorText" class="text" type="text" spellcheck="false" placeholder="#87CEEB" />
+      </div>
+    </section>
+
+    <section class="field">
+      <div class="label">开门图标</div>
+      <div class="row">
+        <div class="preview" id="iconPreview"><span>默认</span></div>
+        <div class="controls">
+          <button id="pickIcon" class="btn">选择图片</button>
+          <button id="resetIcon" class="btn">恢复默认</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="field">
+      <div class="label">界面背景</div>
+      <div class="row">
+        <div class="preview" id="bgPreview"><span>默认</span></div>
+        <div class="controls">
+          <button id="pickBg" class="btn">选择图片</button>
+          <button id="resetBg" class="btn">恢复默认</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="field">
+      <div class="label">主界面背景</div>
+      <div class="row">
+        <div class="preview" id="appBgPreview"><span>默认</span></div>
+        <div class="controls">
+          <button id="pickAppBg" class="btn">选择图片</button>
+          <button id="resetAppBg" class="btn">恢复默认</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <button id="resetAll" class="btn">恢复全部默认</button>
+      <span class="spacer"></span>
+      <button id="save" class="btn btn-primary">保存</button>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

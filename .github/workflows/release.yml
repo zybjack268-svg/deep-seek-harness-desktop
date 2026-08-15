@@ -1,0 +1,56 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Electron binary
+        run: node node_modules/electron/install.js
+
+      - name: Build (no publish)
+        run: npm run dist -- --publish never
+        env:
+          # 本工作流不签名/公证：跳过 macOS 签名自动发现，生成未签名产物。
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # 若配置了 Electron 镜像加速可在此注入，否则走默认下载源。
+          # ELECTRON_MIRROR: ${{ secrets.ELECTRON_MIRROR }}
+
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb

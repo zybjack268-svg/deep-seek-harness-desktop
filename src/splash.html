@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; frame-src http://127.0.0.1:* http://localhost:*" />
+  <title>deep seek ZYB</title>
+  <link rel="stylesheet" href="splash.css" />
+</head>
+<body>
+  <!-- 门后：真正的应用 -->
+  <iframe id="app" class="app" title="deep seek ZYB" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+
+  <!-- 门：上下两扇 -->
+  <div id="door" class="door">
+    <div class="door-half door-top"></div>
+    <div class="door-half door-bottom"></div>
+  </div>
+
+  <!-- 中间的圆形图标 / 加载环 -->
+  <div id="center" class="center">
+    <div class="stage">
+      <div id="spinner" class="spinner"></div>
+      <button id="knob" class="knob" aria-label="打开 deep seek ZYB">
+        <img class="whale" src="whale.svg" alt="" draggable="false" />
+      </button>
+    </div>
+    <div id="status" class="status">正在启动 deep seek ZYB…</div>
+  </div>
+
+  <script src="splash.js"></script>
+</body>
+</html>

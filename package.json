@@ -1,0 +1,31 @@
+{
+  "name": "deepseek-harness-desktop",
+  "productName": "deep seek ZYB",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness 桌面客户端：把 dsh Web GUI 封装为跨平台 Electron 应用。",
+  "main": "src/main.cjs",
+  "private": true,
+  "license": "MIT",
+  "author": "DeepSeek Harness Desktop",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zybjack268-svg/deep-seek-harness-desktop.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "pack": "electron-builder --dir"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.6",
+    "@liustack/modlens": "^3.16.6"
+  },
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

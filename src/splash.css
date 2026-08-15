@@ -1,0 +1,201 @@
+:root {
+  --door-bg: #ffffff;
+  --door-mid: #f2f3f5;
+  --seam: #dfe1e6;
+  --text: #151517;
+  --text-muted: #6b7280;
+  --ring: rgba(0, 0, 0, 0.06);
+  --glow-color: #87CEEB;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --door-bg: #151517;
+    --door-mid: #1c1c1e;
+    --seam: #2c2c30;
+    --text: #f0f0f2;
+    --text-muted: #9ca3af;
+    --ring: rgba(255, 255, 255, 0.08);
+    --glow-color: #87CEEB;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--door-bg);
+}
+
+/* 门后的应用 */
+.app {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  z-index: 1;
+  background: var(--door-bg);
+}
+
+/* 门：两扇，覆盖在应用之上 */
+.door {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+.door-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.door-top {
+  top: 0;
+  background: linear-gradient(to bottom, var(--door-mid), var(--door-bg) 60%, var(--door-bg));
+}
+.door-bottom {
+  bottom: 0;
+  background: linear-gradient(to top, var(--door-mid), var(--door-bg) 60%, var(--door-bg));
+}
+
+/* 门边缘光效：附着在每扇门的开启边缘上，随门一起移动 */
+.door-half::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--glow-color);
+  border-radius: 999px;
+  box-shadow:
+    0 0 8px 2px var(--glow-color),
+    0 0 22px 6px var(--glow-color);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.door-top::after { bottom: 0; }
+.door-bottom::after { top: 0; }
+.door.open .door-half::after { opacity: 0; }
+
+/* 粒子层：位于每扇门的开启边缘，往外飘散，增加立体感 */
+.particles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 21;
+  transition: opacity 0.5s ease;
+}
+.door-top .particles { bottom: 1px; }
+.door-bottom .particles { top: 1px; }
+.door.open .particles { opacity: 0; }
+
+.particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--glow-color);
+  box-shadow: 0 0 6px 2px var(--glow-color);
+  opacity: 0;
+  pointer-events: none;
+  animation: particle-float var(--dur, 2.6s) ease-out var(--delay, 0s) infinite;
+}
+.door.open .particle { animation: none; }
+
+@keyframes particle-float {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  12% { opacity: var(--peak, 0.8); }
+  100% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, -70px)) scale(0.15); }
+}
+.door.open .door-top { transform: translateY(-100%); }
+.door.open .door-bottom { transform: translateY(100%); }
+/* 开门后不再拦截鼠标，让点击穿透到门后的应用。 */
+.door.open { pointer-events: none; }
+
+/* 中间区域 */
+.center {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.center.revealed { opacity: 0; }
+.center.revealed .knob { pointer-events: none; }
+
+.stage {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 加载环 */
+.spinner {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid rgba(128, 130, 140, 0.22);
+  border-top-color: var(--text);
+  animation: spin 0.9s linear infinite;
+  opacity: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.spinner.off { opacity: 0; transform: scale(0.6); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 圆形图标（门把手） */
+.knob {
+  position: absolute;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 1px solid var(--ring);
+  background: #ffffff;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.22), 0 2px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transform: scale(0.55);
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.knob.on { opacity: 1; transform: scale(1); }
+.knob:hover { transform: scale(1.07); }
+.knob:active { transform: scale(0.97); }
+.knob .whale { width: 100%; height: 100%; pointer-events: none; object-fit: contain; }
+/* 自定义图标：铺满整个圆 */
+.knob.custom { padding: 0; overflow: hidden; }
+.knob.custom .whale { object-fit: cover; }
+
+.status {
+  color: var(--text-muted);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  min-height: 18px;
+  user-select: none;
+}
