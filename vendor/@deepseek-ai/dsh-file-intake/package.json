@@ -1,0 +1,24 @@
+{
+  "name": "@deepseek-ai/dsh-file-intake",
+  "version": "0.1.0",
+  "description": "文件接收桥：接收粘贴/拖入的非图片文件（PDF 自动提取文本），落盘并把路径写入输入框，供模型读取。",
+  "type": "module",
+  "main": "dsh/index.js",
+  "exports": {
+    ".": {
+      "default": "./dsh/index.js"
+    },
+    "./client": {
+      "default": "./dsh/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "immediately": true
+    }
+  },
+  "license": "MIT"
+}

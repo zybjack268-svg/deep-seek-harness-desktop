@@ -4,6 +4,7 @@ const { BrowserWindow, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { currentBackground } = require('./theme.cjs');
+const { logTiming } = require('./timing.cjs');
 
 /** 判断是否为本地 Harness 服务地址（窗口内加载）；其余一律外链。 */
 function isLocalHarnessUrl(url) {
@@ -52,10 +53,14 @@ function createMainWindow() {
     },
   });
 
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    logTiming('stage: splash window shown (door visible)');
+    win.show();
+  });
 
   win.webContents.on('did-finish-load', () => {
     console.log('[dsh-desktop] splash loaded');
+    logTiming('stage: splash page (door) loaded');
   });
   win.webContents.on('did-fail-load', (_event, code, desc, url) => {
     console.error(`[dsh-desktop] splash load failed (${code} ${desc}): ${url}`);
@@ -107,7 +112,7 @@ function createSkillsWindow() {
   return win;
 }
 
-/** 外观设置窗口。 */
+/** 启动设置窗口。 */
 function createSettingsWindow() {
   const win = new BrowserWindow({
     width: 460,
@@ -115,7 +120,7 @@ function createSettingsWindow() {
     resizable: false,
     minimizable: false,
     maximizable: false,
-    title: '外观设置 · deep seek ZYB',
+    title: '启动设置 · deep seek ZYB',
     backgroundColor: currentBackground(),
     show: false,
     icon: resolveIcon(),

@@ -6,10 +6,10 @@ const glowColorEl = document.getElementById('glowColor');
 const glowColorTextEl = document.getElementById('glowColorText');
 const iconPreviewEl = document.getElementById('iconPreview');
 const bgPreviewEl = document.getElementById('bgPreview');
-const appBgPreviewEl = document.getElementById('appBgPreview');
+const autoOpenEl = document.getElementById('autoOpen');
 const toastEl = document.getElementById('toast');
 
-let state = { glowColor: '#87CEEB', customIcon: '', customBackground: '', customAppBackground: '' };
+let state = { glowColor: '#87CEEB', customIcon: '', customBackground: '', autoOpen: true };
 
 let toastTimer = null;
 function showToast(msg) {
@@ -34,7 +34,7 @@ async function refresh() {
   glowColorTextEl.value = state.glowColor || '#87CEEB';
   setPreview(iconPreviewEl, state.customIconUrl);
   setPreview(bgPreviewEl, state.customBackgroundUrl);
-  setPreview(appBgPreviewEl, state.customAppBackgroundUrl);
+  autoOpenEl.checked = state.autoOpen !== false;
 }
 
 glowColorEl.addEventListener('input', () => {
@@ -75,26 +75,18 @@ document.getElementById('resetBg').addEventListener('click', () => {
   setPreview(bgPreviewEl, '');
 });
 
-document.getElementById('pickAppBg').addEventListener('click', async () => {
-  const r = await api.pickImage('app-background');
-  if (r && r.path) {
-    state.customAppBackground = r.path;
-    setPreview(appBgPreviewEl, r.url);
-  }
-});
-document.getElementById('resetAppBg').addEventListener('click', () => {
-  state.customAppBackground = '';
-  setPreview(appBgPreviewEl, '');
+autoOpenEl.addEventListener('change', () => {
+  state.autoOpen = autoOpenEl.checked;
 });
 
 document.getElementById('resetAll').addEventListener('click', async () => {
   const d = await api.reset();
-  state = { glowColor: d.glowColor, customIcon: '', customBackground: '', customAppBackground: '' };
+  state = { glowColor: d.glowColor, customIcon: '', customBackground: '', autoOpen: d.autoOpen };
   glowColorEl.value = state.glowColor;
   glowColorTextEl.value = state.glowColor;
   setPreview(iconPreviewEl, '');
   setPreview(bgPreviewEl, '');
-  setPreview(appBgPreviewEl, '');
+  autoOpenEl.checked = state.autoOpen !== false;
   showToast('已恢复默认');
 });
 
@@ -103,7 +95,7 @@ document.getElementById('save').addEventListener('click', async () => {
     glowColor: state.glowColor,
     customIcon: state.customIcon,
     customBackground: state.customBackground,
-    customAppBackground: state.customAppBackground,
+    autoOpen: state.autoOpen,
   });
   showToast('已保存，下次启动生效');
 });

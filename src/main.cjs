@@ -1,12 +1,13 @@
 'use strict';
 
-const { app, dialog, nativeTheme, ipcMain, clipboard, shell, nativeImage } = require('electron');
+const { app, dialog, nativeTheme, ipcMain, clipboard, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { DshServer } = require('./server-manager.cjs');
 const { createMainWindow, createSkillsWindow, createSettingsWindow } = require('./window.cjs');
 const { buildAppMenu } = require('./menu.cjs');
 const { useSystemTheme, currentBackground } = require('./theme.cjs');
+const { logTiming } = require('./timing.cjs');
 const { scanSkills, primarySkillRoot } = require('./skills.cjs');
 const { DEFAULTS, load: loadAppearance, save: saveAppearance, customDir, toUrl } = require('./settings.cjs');
 
@@ -61,67 +62,6 @@ if (!gotLock) {
         }
       }) || null
     );
-  }
-
-  /** 生成主界面自定义背景的注入 CSS（把白色/主题底色覆盖为透明，露出壁纸）。
-   * 注意：应用页面是 http://127.0.0.1 源，Chromium 禁止其加载 file:// 图片，
-   * 所以这里把壁纸转成 data URL 注入。 */
-  function appBackgroundCss(filePath) {
-    if (!filePath) return '';
-    let url = '';
-    try {
-      let img = nativeImage.createFromPath(filePath);
-      if (img.isEmpty()) return '';
-      const size = img.getSize();
-      if (size.width > 1920) img = img.resize({ width: 1920 });
-      url = 'data:image/jpeg;base64,' + img.toJPEG(85).toString('base64');
-    } catch {
-      return '';
-    }
-    if (!url) return '';
-    return `html, body {
-  background-color: transparent !important;
-  background-image: url("${url}") !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-}
-body {
-  --dsw-alias-bg-base: transparent !important;
-  --dsw-alias-bg-layer-1: transparent !important;
-  --dsw-alias-bg-layer-2: transparent !important;
-  --dsw-alias-bg-layer-3: transparent !important;
-  --dsw-alias-bg-module-platform: transparent !important;
-  --dsw-alias-bg-multi-select: transparent !important;
-  --dsw-specific-input-major: transparent !important;
-  --dsw-specific-menu: transparent !important;
-  --dsw-specific-sidebar-fill: transparent !important;
-  --dsw-specific-selector: transparent !important;
-  --dsw-specific-tip: transparent !important;
-  --dsw-specific-login-input: transparent !important;
-}`;
-  }
-
-  /** 把主界面自定义背景注入到应用 iframe 里（或移除）。 */
-  function injectAppBackground() {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    const frame = appFrame();
-    if (!frame) return;
-    const css = appBackgroundCss(loadAppearance().customAppBackground);
-    const code = `(function () {
-      var id = '__dsh_app_bg__';
-      var old = document.getElementById(id);
-      if (old) old.remove();
-      if (${css ? 'true' : 'false'}) {
-        var st = document.createElement('style');
-        st.id = id;
-        st.textContent = ${JSON.stringify(css)};
-        document.head.appendChild(st);
-      }
-      return true;
-    })()`;
-    frame.executeJavaScript(code, true).catch(() => {});
   }
 
   /** 在主窗口输入框填入 `/name `；失败则复制到剪贴板兜底。 */
@@ -205,7 +145,6 @@ body {
         ...s,
         customIconUrl: toUrl(s.customIcon),
         customBackgroundUrl: toUrl(s.customBackground),
-        customAppBackgroundUrl: toUrl(s.customAppBackground),
       };
     });
     ipcMain.handle('appearance:save', (_e, data) => {
@@ -214,7 +153,6 @@ body {
         ...s,
         customIconUrl: toUrl(s.customIcon),
         customBackgroundUrl: toUrl(s.customBackground),
-        customAppBackgroundUrl: toUrl(s.customAppBackground),
       };
     });
     ipcMain.handle('appearance:pick-image', async (_e, kind) => {
@@ -227,7 +165,7 @@ body {
       if (res.canceled || !res.filePaths || !res.filePaths[0]) return null;
       const src = res.filePaths[0];
       const ext = path.extname(src).toLowerCase() || '.png';
-      const name = kind === 'icon' ? 'icon' : kind === 'background' ? 'background' : 'app-background';
+      const name = kind === 'icon' ? 'icon' : 'background';
       const dst = path.join(customDir(), name + ext);
       try {
         fs.copyFileSync(src, dst);
@@ -238,10 +176,27 @@ body {
     });
     ipcMain.handle('appearance:reset', () => {
       const s = saveAppearance(DEFAULTS);
-      return { ...s, customIconUrl: '', customBackgroundUrl: '', customAppBackgroundUrl: '' };
+      return { ...s, customIconUrl: '', customBackgroundUrl: '' };
     });
-    // 应用 iframe 加载完成后，注入主界面自定义背景。
-    ipcMain.on('splash:app-loaded', () => injectAppBackground());
+    // 项目插件的目录选择桥：启动页 → 主进程原生目录对话框。
+    // （dsh 自带的 koffi 选择器在 Electron 的 Node 运行时下读取结果时
+    //  会 N-API 崩溃，见 worker.cjs readUtf16 的 FATAL ERROR，故走本桥。）
+    ipcMain.handle('dsh-project:pick-folder', async () => {
+      const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : null;
+      const res = await dialog.showOpenDialog(parent, {
+        title: '选择文件夹位置',
+        buttonLabel: '选择此文件夹',
+        properties: ['openDirectory', 'createDirectory'],
+      });
+      if (res.canceled || !res.filePaths || !res.filePaths[0]) return null;
+      return res.filePaths[0];
+    });
+    // 应用 iframe 加载完成（启动耗时记录；背景主题交给 Aqua 插件负责）。
+    ipcMain.on('splash:app-loaded', () => {
+      logTiming('stage: app iframe loaded (knob → clickable)');
+    });
+    // 启动页渲染进程上报的阶段耗时。
+    ipcMain.on('splash:timing', (_e, msg) => logTiming('renderer: ' + String(msg)));
   }
 
   app.on('second-instance', () => {
@@ -266,11 +221,14 @@ body {
   }
 
   async function startServer() {
+    logTiming('stage: start spawning dsh server');
     server = new DshServer();
     server.on('url', (url) => {
       console.log(`[dsh-desktop] server ready at ${url}`);
+      logTiming('stage: dsh server ready (URL parsed)');
       if (mainWindow && !mainWindow.isDestroyed() && !quitting) {
         mainWindow.webContents.send('splash:ready', { url });
+        logTiming('stage: splash:ready sent');
       }
     });
     server.on('error', (err) => {
@@ -289,6 +247,7 @@ body {
 
   app.whenReady().then(async () => {
     console.log('[dsh-desktop] app ready');
+    logTiming('stage: electron app ready');
     // 深浅色跟随系统（标题栏 + 页面 prefers-color-scheme 联动）。
     useSystemTheme();
     registerSkillsIpc();
@@ -296,6 +255,7 @@ body {
     buildAppMenu({ openSkills, openSettings });
     // 先显示启动页（加载动画 + 门），再后台拉起 dsh 服务。
     createMain();
+    logTiming('stage: main window created');
     try {
       await startServer();
     } catch (err) {

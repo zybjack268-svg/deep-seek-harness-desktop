@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data: file:" />
-  <title>外观设置 · deep seek ZYB</title>
+  <title>启动设置 · deep seek ZYB</title>
   <link rel="stylesheet" href="settings.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>外观设置</h1>
+    <h1>启动设置</h1>
   </header>
 
   <main class="form">
@@ -43,13 +43,15 @@
     </section>
 
     <section class="field">
-      <div class="label">主界面背景</div>
-      <div class="row">
-        <div class="preview" id="appBgPreview"><span>默认</span></div>
-        <div class="controls">
-          <button id="pickAppBg" class="btn">选择图片</button>
-          <button id="resetAppBg" class="btn">恢复默认</button>
+      <div class="row switch-row">
+        <div class="switch-text">
+          <div class="label">自动开门</div>
+          <div class="hint">应用加载完成后自动打开门，无需点击图标</div>
         </div>
+        <label class="switch">
+          <input type="checkbox" id="autoOpen" />
+          <span class="slider"></span>
+        </label>
       </div>
     </section>
 

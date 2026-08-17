@@ -1,0 +1,24 @@
+{
+  "name": "@deepseek-ai/dsh-project",
+  "version": "0.1.0",
+  "description": "项目（Projects）：在 DSH 工作区里创建项目、向项目添加文件夹并自动学习其内容（记忆限于该项目）、按项目发起对话。",
+  "type": "module",
+  "main": "dsh/index.js",
+  "exports": {
+    ".": {
+      "default": "./dsh/index.js"
+    },
+    "./client": {
+      "default": "./dsh/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "immediately": true
+    }
+  },
+  "license": "MIT"
+}

@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@deepseek-ai/dsh": "0.1.0-rc.6",
-    "@liustack/modlens": "^3.16.6"
+    "@liustack/modlens": "^3.16.6",
+    "pdfjs-dist": "^4.10.38"
   },
   "devDependencies": {
     "electron": "^43.0.0",

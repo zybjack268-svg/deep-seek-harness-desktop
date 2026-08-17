@@ -19,6 +19,7 @@ npmRebuild: false
 
 files:
   - src/**/*
+  - vendor/**/*
   - package.json
   - "!**/*.map"
 

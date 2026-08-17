@@ -1,0 +1,19 @@
+{
+  "name": "@deepseek-ai/dsh-desktop-services",
+  "version": "0.1.0",
+  "description": "桌面端宿主服务：为 dshmarket 提供 desktopProfiles / desktopPnpm（内置 pnpm 的插件安装运行时）。",
+  "type": "module",
+  "main": "dsh/index.js",
+  "exports": {
+    ".": {
+      "default": "./dsh/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

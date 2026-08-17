@@ -1,0 +1,6 @@
+# 桌面端宿主服务 bundle：把 desktopProfiles / desktopPnpm 提供给 dshmarket。
+# 该 bundle 必须排在 dshmarket 之前（bundle 列表顺序），否则市场的 apply
+# 先执行、读不到服务，会退回“spawn 全局 dsh/pnpm”的 CLI 路径。
+- insert:
+    - id: dsh-desktop-services
+      name: '@deepseek-ai/dsh-desktop-services'

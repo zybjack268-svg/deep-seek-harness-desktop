@@ -9,3 +9,8 @@ out/
 .DS_Store
 Thumbs.db
 npm-debug.log*
+
+# 本地临时目录与个人文件夹（不随仓库发布）
+.tmp-*/
+FAST_Q1/
+

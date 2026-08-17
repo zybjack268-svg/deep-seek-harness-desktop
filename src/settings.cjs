@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-const DEFAULTS = { glowColor: '#87CEEB', customIcon: '', customBackground: '', customAppBackground: '' };
+const DEFAULTS = { glowColor: '#87CEEB', customIcon: '', customBackground: '', autoOpen: true };
 
 function settingsFile() {
   return path.join(app.getPath('userData'), 'appearance.json');
@@ -19,7 +19,7 @@ function load() {
       glowColor: typeof data.glowColor === 'string' && data.glowColor ? data.glowColor : DEFAULTS.glowColor,
       customIcon: typeof data.customIcon === 'string' ? data.customIcon : '',
       customBackground: typeof data.customBackground === 'string' ? data.customBackground : '',
-      customAppBackground: typeof data.customAppBackground === 'string' ? data.customAppBackground : '',
+      autoOpen: typeof data.autoOpen === 'boolean' ? data.autoOpen : DEFAULTS.autoOpen,
     };
   } catch {
     return { ...DEFAULTS };
@@ -31,7 +31,7 @@ function save(data) {
     glowColor: data && typeof data.glowColor === 'string' && data.glowColor ? data.glowColor : DEFAULTS.glowColor,
     customIcon: data && typeof data.customIcon === 'string' ? data.customIcon : '',
     customBackground: data && typeof data.customBackground === 'string' ? data.customBackground : '',
-    customAppBackground: data && typeof data.customAppBackground === 'string' ? data.customAppBackground : '',
+    autoOpen: !(data && data.autoOpen === false),
   };
   fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
   fs.writeFileSync(settingsFile(), JSON.stringify(next, null, 2), 'utf8');

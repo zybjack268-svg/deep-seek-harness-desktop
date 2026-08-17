@@ -82,7 +82,7 @@ function buildAppMenu({ openSkills, openSettings } = {}) {
         ...(openSettings
           ? [
               {
-                label: '外观设置…',
+                label: '启动设置…',
                 accelerator: 'CmdOrCtrl+,',
                 click: () => openSettings(),
               },
