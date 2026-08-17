@@ -1,7 +1,7 @@
 {
   "name": "deepseek-harness-desktop",
   "productName": "deep seek ZYB",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DeepSeek Harness 桌面客户端：把 dsh Web GUI 封装为跨平台 Electron 应用。",
   "main": "src/main.cjs",
   "private": true,
