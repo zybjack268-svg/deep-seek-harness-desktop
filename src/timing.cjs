@@ -27,4 +27,15 @@ function logTiming(msg) {
   }
 }
 
-module.exports = { logTiming, reset };
+/** 把诊断/告警写进 dsh-web.log（与子进程日志同文件，便于一次收集）。 */
+function logIssue(msg) {
+  try {
+    const dir = app.getPath('logs');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(path.join(dir, 'dsh-web.log'), `[${new Date().toISOString()}] [desktop] ${msg}\n`);
+  } catch {
+    /* 日志失败不影响运行 */
+  }
+}
+
+module.exports = { logTiming, logIssue, reset };

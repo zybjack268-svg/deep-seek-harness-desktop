@@ -7,7 +7,7 @@ const { app } = require('electron');
 const path = require('node:path');
 const os = require('node:os');
 const fs = require('node:fs');
-const { logTiming } = require('./timing.cjs');
+const { logTiming, logIssue } = require('./timing.cjs');
 
 /**
  * 管理 dsh Web 服务的生命周期：
@@ -34,9 +34,14 @@ function ensureModlensLink() {
 /**
  * 把指定包目录链接到 $DSH_HOME/profiles/node_modules/<pkg>（junction），
  * 供 dsh 从 profile 目录按 Node 逐级查找解析到（幂等：指向正确时不动）。
+ * 失败只记录日志、不中断启动：dsh-child 端会把解析不到的 bundle 跳过，
+ * 应用仍可正常打开（只是少一个插件），用户可凭日志排查。
  */
 function ensureProfileLink(pkgName, target) {
-  if (!target) return;
+  if (!target) {
+    logIssue(`profile link skip: ${pkgName} 未解析到包目录`);
+    return;
+  }
   try {
     const home = process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
     const link = path.join(home, 'profiles', 'node_modules', ...pkgName.split('/'));
@@ -59,7 +64,7 @@ function ensureProfileLink(pkgName, target) {
     }
     fs.symlinkSync(target, link, 'junction');
   } catch (error) {
-    console.log(`[dsh-desktop] profile link warning for ${pkgName}: ` + (error && error.message ? error.message : error));
+    logIssue(`profile link warning for ${pkgName}: ` + (error && error.message ? error.message : error));
   }
 }
 

@@ -44,6 +44,26 @@ function isBundlePackage(profileDir, name) {
 }
 
 /**
+ * 内置 bundle 是否可解析（主进程已把它 junction 进 profiles/node_modules，
+ * 或市场装进了 profiles/web/node_modules）。链接失败/目标缺失时返回 false，
+ * 由调用方跳过——避免因环境问题（如杀软拦截 junction）导致整个服务退出。
+ */
+function desktopBundleResolvable(profileDir, name) {
+  const bases = [path.join(profileDir, '..', 'node_modules'), path.join(profileDir, 'node_modules')];
+  for (const base of bases) {
+    try {
+      const pkgPath = path.join(base, ...name.split('/'), 'package.json');
+      if (!fs.existsSync(pkgPath)) continue;
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (typeof pkg.dsh?.bundle?.patch === 'string') return true;
+    } catch {
+      /* 继续查下一个位置 */
+    }
+  }
+  return false;
+}
+
+/**
  * 把 profile 依赖里声明了 dsh.bundle 的包对齐进 bundles 层（等价于官方
  * `dsh plugin add` 的 reconcilePlugins 步骤）。插件市场只做 pnpm 安装 +
  * 热挂载、不写 bundles——没有这一步，市场装的 bundle 型插件重启后就是
@@ -71,6 +91,12 @@ async function ensureDesktopBundles() {
     const bundles = manifest.dsh?.profile?.bundles ?? [];
     for (const name of DESKTOP_BUNDLES) {
       if (bundles.includes(name)) continue;
+      // 自愈保护：包解析不到（链接被拦/安装不完整）就跳过该 bundle 并记日志，
+      // 不让一个插件拖垮整个启动。
+      if (!desktopBundleResolvable(dir, name)) {
+        console.error(`[dsh-desktop] bundle "${name}" 无法解析，跳过（主进程链接可能失败，详见 dsh-web.log）`);
+        continue;
+      }
       // 桌面服务必须挂在插件市场之前（市场的 apply 在挂载时读取服务）。
       if (name === '@deepseek-ai/dsh-desktop-services' && bundles.includes('dshmarket')) {
         bundles.splice(bundles.indexOf('dshmarket'), 0, name);
@@ -115,7 +141,7 @@ function patchEntryText(entry) {
  *   市场自己的脱离进程重启会与主进程冲突），禁用其 allowRestart。
  */
 const DESKTOP_PLUGIN_CONFIGS = [
-  { id: 'dshmarket', config: { allowRestart: false } },
+  { id: 'dshmarket', name: 'dshmarket', config: { allowRestart: false } },
 ];
 
 function configRowText(entry) {
@@ -128,6 +154,22 @@ function configRowText(entry) {
     }
   }
   return yaml;
+}
+
+/**
+ * 内置插件（普通包）是否可解析（junction 存在且 package.json 可读）。
+ * 链接失败时调用方跳过登记，避免 loader 因无法导入而让整个服务退出。
+ */
+function pluginPackageResolvable(profileDir, name) {
+  const bases = [path.join(profileDir, '..', 'node_modules'), path.join(profileDir, 'node_modules')];
+  for (const base of bases) {
+    try {
+      if (fs.existsSync(path.join(base, ...name.split('/'), 'package.json'))) return true;
+    } catch {
+      /* 继续查下一个位置 */
+    }
+  }
+  return false;
 }
 
 async function ensureDesktopPatches() {
@@ -146,6 +188,11 @@ async function ensureDesktopPatches() {
       // 已登记则跳过（只匹配真实条目，不匹配注释里的字样）。
       const re = new RegExp(`^\\s*-\\s+id:\\s*${entry.id}\\s*$`, 'm');
       if (re.test(content)) continue;
+      // 自愈保护：包解析不到就跳过登记，不让 loader 因无法导入而拖垮启动。
+      if (!pluginPackageResolvable(dir, entry.name)) {
+        console.error(`[dsh-desktop] 插件 "${entry.name}" 无法解析，跳过登记（主进程链接可能失败）`);
+        continue;
+      }
       const base = content.replace(/\[\s*\]\s*$/, '').trimEnd();
       content = (base ? base + '\n\n' : '') + patchEntryText(entry) + '\n';
     }
@@ -153,6 +200,11 @@ async function ensureDesktopPatches() {
       // 配置覆写行：顶层 `- id: X` 且紧随 config（区别于 insert 块里的缩进 id）。
       const re = new RegExp(`^\\s*-\\s+id:\\s*${entry.id}\\s*$`, 'm');
       if (re.test(content)) continue;
+      // 自愈保护：目标插件没加载时配置行会指向不存在的 id，跳过。
+      if (entry.name && !pluginPackageResolvable(dir, entry.name)) {
+        console.error(`[dsh-desktop] 插件 "${entry.name}" 无法解析，跳过配置覆写`);
+        continue;
+      }
       const base = content.replace(/\[\s*\]\s*$/, '').trimEnd();
       content = (base ? base + '\n\n' : '') + configRowText(entry) + '\n';
     }
