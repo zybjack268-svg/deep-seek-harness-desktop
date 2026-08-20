@@ -22,16 +22,6 @@ const { logTiming, logIssue } = require('./timing.cjs');
  */
 
 /**
- * 把 modlens 包链接到 $DSH_HOME/profiles/node_modules，让插件名
- * `@liustack/modlens` 能从 profile 目录按 Node 逐级查找解析到。
- * dsh 的 healProfilesModuleFallback 只维护它自己依赖闭包的链接，
- * modlens 不在其中，所以这里手动补上（幂等，正确时不动）。
- */
-function ensureModlensLink() {
-  ensureProfileLink('@liustack/modlens', resolvePluginDir('@liustack/modlens'));
-}
-
-/**
  * 把指定包目录链接到 $DSH_HOME/profiles/node_modules/<pkg>（junction），
  * 供 dsh 从 profile 目录按 Node 逐级查找解析到（幂等：指向正确时不动）。
  * 失败只记录日志、不中断启动：dsh-child 端会把解析不到的 bundle 跳过，
@@ -106,18 +96,10 @@ class DshServer extends EventEmitter {
     // 固定端口让扩展零配置发现桌面端的桥（--port 0 随机端口会导致每次都要手填）。
     // 端口被占用时（启动即失败、从未打印 URL），自动退回 --port 0 随机端口一次。
     const args = ['--profile', 'web'];
-    // 确保各内置包可从 profile 目录解析：dsh-child 会把 bundle 型
-    // （modlens / bridge-browser / desktop-services / dsh-at-file / dshmarket）
-    // 加进 web profile 的 bundles、把 aqua / dsh-project / dsh-file-intake
-    // 以 insert 补丁写进 cordis.patch.yml。
-    ensureModlensLink();
+    // 最小稳定配置只保留 Aqua 主题和插件市场；桌面服务是市场的必需依赖。
     for (const pkg of [
       '@deepseek-ai/dsh-client-ui-aqua',
-      '@deepseek-ai/dsh-project',
-      '@deepseek-ai/dsh-bridge-browser',
-      '@deepseek-ai/dsh-file-intake',
       '@deepseek-ai/dsh-desktop-services',
-      'dsh-at-file',
       'dshmarket',
     ]) {
       ensureProfileLink(pkg, resolvePluginDir(pkg));

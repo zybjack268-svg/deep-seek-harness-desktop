@@ -11,6 +11,17 @@ process.argv = [process.execPath, __filename, ...args];
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { createRequire } = require('node:module');
+const { pathToFileURL } = require('node:url');
+
+// electron-builder may keep dsh's private dependency tree nested below
+// @deepseek-ai/dsh. Resolve app-boot from dsh's own module location instead of
+// relying on npm's development-time hoisting into the application root.
+const dshRequire = createRequire(require.resolve('@deepseek-ai/dsh/lib/bin.js'));
+
+function importDshAppBoot() {
+  return import(pathToFileURL(dshRequire.resolve('@deepseek-ai/dsh-app-boot')).href);
+}
 
 /**
  * 预置 modlens / 浏览器桥 / @路径引用 / 桌面服务 / 插件市场 到 web profile 的
@@ -25,9 +36,6 @@ const path = require('node:path');
  * - dshmarket：可视化插件市场（浏览/搜索/一键安装社区插件）
  */
 const DESKTOP_BUNDLES = [
-  '@liustack/modlens',
-  '@deepseek-ai/dsh-bridge-browser',
-  'dsh-at-file',
   '@deepseek-ai/dsh-desktop-services',
   'dshmarket',
 ];
@@ -84,7 +92,7 @@ function reconcileMarketPlugins(manifest, dir, bundles) {
 
 async function ensureDesktopBundles() {
   try {
-    const boot = await import('@deepseek-ai/dsh-app-boot');
+    const boot = await importDshAppBoot();
     const dir = boot.resolveProfileDir('web');
     boot.initProfile(dir, boot.PROFILE_TEMPLATES.web ?? boot.DEFAULT_PROFILE_BUNDLES);
     const manifest = boot.readProfileManifest('dsh', dir);
@@ -127,8 +135,6 @@ async function ensureDesktopBundles() {
  */
 const DESKTOP_PLUGIN_PATCHES = [
   { id: 'ui-aqua', name: '@deepseek-ai/dsh-client-ui-aqua' },
-  { id: 'dsh-project', name: '@deepseek-ai/dsh-project' },
-  { id: 'dsh-file-intake', name: '@deepseek-ai/dsh-file-intake' },
 ];
 
 function patchEntryText(entry) {
@@ -174,7 +180,7 @@ function pluginPackageResolvable(profileDir, name) {
 
 async function ensureDesktopPatches() {
   try {
-    const boot = await import('@deepseek-ai/dsh-app-boot');
+    const boot = await importDshAppBoot();
     const dir = boot.resolveProfileDir('web');
     boot.initProfile(dir, boot.PROFILE_TEMPLATES.web ?? boot.DEFAULT_PROFILE_BUNDLES);
     const patchFile = path.join(dir, 'cordis.patch.yml');
@@ -219,6 +225,7 @@ async function ensureDesktopPatches() {
   await ensureDesktopPatches();
   await import('@deepseek-ai/dsh/lib/bin.js');
 })().catch((err) => {
-  console.error(err && err.stack ? err.stack : String(err));
+  // AggregateError.stack 不包含内部 errors；递归展开，才能定位具体失败插件。
+  console.error(require('node:util').inspect(err, { depth: 12, colors: false }));
   process.exit(1);
 });

@@ -17,6 +17,11 @@ asar: false
 # 关闭重编译可避免依赖本机/CI 的 C++ 编译工具链，也让构建更快、更可复现。
 npmRebuild: false
 
+# npm 会把 DeepSeek Harness 的依赖提升到开发目录根部，但 electron-builder
+# 仅按生产依赖图复制，部分包仍嵌套在 @deepseek-ai/dsh 下。构建后把其中缺失的
+# 核心包补到应用根 node_modules，确保 ESM 从任何内置插件目录都能解析到。
+afterPack: scripts/after-pack.cjs
+
 files:
   - src/**/*
   - vendor/**/*
